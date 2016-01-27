@@ -35,6 +35,8 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             pinView!.canShowCallout = true
             pinView!.pinTintColor = MKPinAnnotationView.redPinColor()
+            pinView!.draggable = true
+            pinView!.animatesDrop = true
             pinView!.rightCalloutAccessoryView = UIButton(type: .DetailDisclosure)
         }
         else {
@@ -53,7 +55,6 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate {
     }
     
     func handleLongPress(recognizer: UILongPressGestureRecognizer) {
-        
         // Get the touch point from the UILongPressGestureRecognizer and convert it to coordinates on the map view.
         let point: CGPoint = recognizer.locationInView(mapView)
         let coordinate: CLLocationCoordinate2D = mapView.convertPoint(point, toCoordinateFromView: mapView)
