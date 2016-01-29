@@ -12,6 +12,7 @@ import MapKit
 class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate {
 
     var longPressGestureRecognizer: UILongPressGestureRecognizer? = nil
+    var currentAnnotation: Annotation? = nil
     var annotations = [MKAnnotation]()
     
     @IBOutlet var mapView: MKMapView!
@@ -33,11 +34,9 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate {
         if pinView == nil {
             // Create a new pin view and initialise it.
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-            pinView!.canShowCallout = true
             pinView!.pinTintColor = MKPinAnnotationView.redPinColor()
             pinView!.draggable = true
             pinView!.animatesDrop = true
-            pinView!.rightCalloutAccessoryView = UIButton(type: .DetailDisclosure)
         }
         else {
             // Reuse an existing pin view and set the annotation.
@@ -47,27 +46,28 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate {
         return pinView
     }
     
-    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
-        if control == view.rightCalloutAccessoryView {
-            //TODO: Segue to the collection view
-            
-        }
-    }
-    
     func handleLongPress(recognizer: UILongPressGestureRecognizer) {
         // Get the touch point from the UILongPressGestureRecognizer and convert it to coordinates on the map view.
         let point: CGPoint = recognizer.locationInView(mapView)
         let coordinate: CLLocationCoordinate2D = mapView.convertPoint(point, toCoordinateFromView: mapView)
         
-        // Create a new MKPointAnnotation for the pin that was dropped on the map.
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
-        
-        // Place the annotation in an array of annotations.
-        annotations.append(annotation)
-        
-        // Add the annotations to the map.
-        mapView.addAnnotations(annotations)
+        switch recognizer.state {
+            case .Began:
+                // Create a new Pin for the point that was touched on the map.
+                currentAnnotation = Annotation()
+                currentAnnotation?.setCoordinate(coordinate)
+                
+                // Add the annotation to the map.
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.mapView.addAnnotation(self.currentAnnotation!)
+                })
+            case .Changed:
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.currentAnnotation?.setCoordinate(coordinate)
+                })
+            default:
+                return
+        }
     }
 }
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		104DF7EC1C5BD2890038A571 /* Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104DF7EB1C5BD2890038A571 /* Annotation.swift */; };
 		106D16521C5963470042EBC3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106D16511C5963470042EBC3 /* AppDelegate.swift */; };
 		106D16541C5963470042EBC3 /* TravelLocationsMapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106D16531C5963470042EBC3 /* TravelLocationsMapViewController.swift */; };
 		106D16571C5963470042EBC3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 106D16551C5963470042EBC3 /* Main.storyboard */; };
@@ -35,6 +36,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		104DF7EB1C5BD2890038A571 /* Annotation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Annotation.swift; sourceTree = "<group>"; };
 		106D164E1C5963470042EBC3 /* VirtualTourist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VirtualTourist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		106D16511C5963470042EBC3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		106D16531C5963470042EBC3 /* TravelLocationsMapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TravelLocationsMapViewController.swift; sourceTree = "<group>"; };
@@ -106,6 +108,7 @@
 				106D165D1C5963470042EBC3 /* LaunchScreen.storyboard */,
 				106D16601C5963470042EBC3 /* Info.plist */,
 				106D16581C5963470042EBC3 /* VirtualTourist.xcdatamodeld */,
+				104DF7EB1C5BD2890038A571 /* Annotation.swift */,
 			);
 			path = VirtualTourist;
 			sourceTree = "<group>";
@@ -262,6 +265,7 @@
 				106D16541C5963470042EBC3 /* TravelLocationsMapViewController.swift in Sources */,
 				106D16521C5963470042EBC3 /* AppDelegate.swift in Sources */,
 				106D165A1C5963470042EBC3 /* VirtualTourist.xcdatamodeld in Sources */,
+				104DF7EC1C5BD2890038A571 /* Annotation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -486,6 +490,7 @@
 				106D167B1C5963470042EBC3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		106D167C1C5963470042EBC3 /* Build configuration list for PBXNativeTarget "VirtualTouristTests" */ = {
 			isa = XCConfigurationList;
@@ -494,6 +499,7 @@
 				106D167E1C5963470042EBC3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		106D167F1C5963470042EBC3 /* Build configuration list for PBXNativeTarget "VirtualTouristUITests" */ = {
 			isa = XCConfigurationList;
@@ -502,6 +508,7 @@
 				106D16811C5963470042EBC3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
