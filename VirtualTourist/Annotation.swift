@@ -8,19 +8,11 @@
 
 import MapKit
 
-class Annotation: NSObject, MKAnnotation {
+class Annotation: MKPointAnnotation {
     
-    var location: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 0, longitude: 0)
+    var pin: Pin
     
-    var coordinate: CLLocationCoordinate2D {
-        get {
-            return location
-        }
-    }
-    
-    func setCoordinate(coordinate: CLLocationCoordinate2D) {
-        willChangeValueForKey("coordinate")
-        self.location = coordinate
-        didChangeValueForKey("coordinate")
+    init(pin: Pin) {
+        self.pin = pin
     }
 }
