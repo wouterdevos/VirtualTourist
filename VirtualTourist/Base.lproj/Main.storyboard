@@ -16,6 +16,7 @@
                         <viewControllerLayoutGuide type="bottom" id="ZfQ-1H-Tyh"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="jg3-PF-HtJ">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="SQT-iX-fHi">
@@ -34,10 +35,10 @@
                                 <exclude reference="SQT-iX-fHi"/>
                             </mask>
                             <mask key="constraints">
+                                <exclude reference="QtZ-fg-RD9"/>
                                 <exclude reference="PFD-o4-iVz"/>
                                 <exclude reference="YoG-tr-noa"/>
                                 <exclude reference="xkJ-ke-oXu"/>
-                                <exclude reference="QtZ-fg-RD9"/>
                             </mask>
                         </variation>
                         <variation key="widthClass=compact">
@@ -45,10 +46,10 @@
                                 <include reference="SQT-iX-fHi"/>
                             </mask>
                             <mask key="constraints">
+                                <include reference="QtZ-fg-RD9"/>
                                 <include reference="PFD-o4-iVz"/>
                                 <include reference="YoG-tr-noa"/>
                                 <include reference="xkJ-ke-oXu"/>
-                                <include reference="QtZ-fg-RD9"/>
                             </mask>
                         </variation>
                     </view>
@@ -93,9 +94,6 @@
                                         </view>
                                     </collectionViewCell>
                                 </cells>
-                                <variation key="widthClass=compact" misplaced="YES">
-                                    <rect key="frame" x="0.0" y="183" width="400" height="373"/>
-                                </variation>
                             </collectionView>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="CKj-xZ-jdn">
                                 <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
@@ -113,8 +111,7 @@
                                         <exclude reference="ARM-ay-NMm"/>
                                     </mask>
                                 </variation>
-                                <variation key="widthClass=compact" misplaced="YES">
-                                    <rect key="frame" x="0.0" y="64" width="400" height="120"/>
+                                <variation key="widthClass=compact">
                                     <mask key="constraints">
                                         <include reference="ARM-ay-NMm"/>
                                     </mask>
@@ -175,6 +172,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="IHy-CH-qhl"/>
                     <connections>
+                        <outlet property="collectionView" destination="Egy-AJ-VrQ" id="5Tb-4y-BBr"/>
                         <outlet property="mapView" destination="3s3-eK-xdH" id="3bX-gH-L65"/>
                     </connections>
                 </viewController>

@@ -152,12 +152,6 @@ class RESTClient: NSObject {
         return true
     }
     
-    /* Helper: Skip the first 5 characters of the response data */
-    class func skipResponseCharacters(data: NSData) -> NSData {
-        let newData = data.subdataWithRange(NSMakeRange(5, data.length - 5))
-        return newData
-    }
-    
     /* Helper: Given raw JSON, return a usable Foundation object */
     class func parseJSONWithCompletionHandler(data: NSData) -> AnyObject? {
         

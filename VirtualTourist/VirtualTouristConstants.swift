@@ -26,6 +26,7 @@ extension VirtualTouristClient {
         static let Extras = "url_m"
         static let DataFormat = "json"
         static let NoJSONCallback = "1"
+        static let PerPage = 21
         
         static let BOUNDING_BOX_HALF_WIDTH = 1.0
         static let BOUNDING_BOX_HALF_HEIGHT = 1.0
@@ -49,6 +50,7 @@ extension VirtualTouristClient {
         static let Extras = "extras"
         static let Format = "format"
         static let NoJSONCallback = "nojsoncallback"
+        static let PerPage = "per_page"
     }
     
     struct JSONResponseKeys {

@@ -6,11 +6,17 @@
 //  Copyright © 2016 Wouter. All rights reserved.
 //
 
+let PhotoDownloadComplete = "com.wouterdevos.PhotoDownloadComplete"
+
 class DataModel {
     
-    var photos = [Photo]()
+    var pins = [Pin]()
     
-    func savePhotos(latitude: Double, longitude: Double, photos: [String:AnyObject]) {
+    init() {
+        
+    }
+    
+    func addPin(latitude: Double, longitude: Double, photos: [String:AnyObject]) {
         
     }
     
@@ -22,4 +28,5 @@ class DataModel {
         
         return Singleton.sharedInstance
     }
+    
 }

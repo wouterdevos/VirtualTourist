@@ -8,14 +8,38 @@
 
 import UIKit
 import MapKit
+import CoreData
 
-class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate {
+class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsControllerDelegate {
 
+    let Region = "region"
+    let RegionLatitude = "latitude"
+    let RegionLongitude = "longitude"
+    let RegionLatitudeDelta = "latitudeDelta"
+    let RegionLongitudeDelta = "longitudeDelta"
+    
     var longPressGestureRecognizer: UILongPressGestureRecognizer? = nil
-    var currentAnnotation: Annotation? = nil
+    var currentPin: Pin? = nil
     var pins = [Pin]()
     
     @IBOutlet var mapView: MKMapView!
+    
+    var context: NSManagedObjectContext {
+        return CoreDataStackManager.sharedInstance().managedObjectContext
+    }
+    
+    lazy var fetchedResultsController: NSFetchedResultsController = {
+        let fetchRequest = NSFetchRequest(entityName: "Pin")
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "latitude", ascending: true)]
+        
+        let fetchedResultsController = NSFetchedResultsController(
+            fetchRequest: fetchRequest,
+            managedObjectContext: self.context,
+            sectionNameKeyPath: nil,
+            cacheName: nil)
+        
+        return fetchedResultsController
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,8 +47,10 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate {
         longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: "addPin:")
         mapView.addGestureRecognizer(longPressGestureRecognizer!)
         mapView.delegate = self
+        fetchedResultsController.delegate = self
         
         fetchPins()
+        fetchRegion()
     }
 
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
@@ -35,13 +61,39 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate {
         }
     }
     
-    // MARK: Fetch the pins for the map.
+    // MARK: Fetch the pins and the map region.
     
     func fetchPins() {
-        for pin in pins {
-            let annotation = Annotation(pin: pin)
-            mapView.addAnnotation(annotation)
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {}
+        
+        mapView.addAnnotations(fetchedResultsController.fetchedObjects as! [Pin])
+    }
+    
+    func fetchRegion() {
+        guard let storedRegion = NSUserDefaults.standardUserDefaults().objectForKey(Region) as? [String:AnyObject] else {
+            print("No region stored in user defaults")
+            return
         }
+        
+        let latitude = storedRegion[RegionLatitude] as! CLLocationDegrees
+        let longitude = storedRegion[RegionLongitude] as! CLLocationDegrees
+        let latitudeDelta = storedRegion[RegionLatitudeDelta] as! CLLocationDegrees
+        let longitudeDelta = storedRegion[RegionLongitudeDelta] as! CLLocationDegrees
+        
+        let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        let span = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
+        let region = MKCoordinateRegion(center: center, span: span)
+        mapView.region = region
+        mapView.setCenterCoordinate(center, animated: true)
+//        mapView.setRegion(region, animated: true)
+    }
+    
+    // MARK: Convenience method for saving the managed object context.
+    
+    func saveContext() {
+        CoreDataStackManager.sharedInstance().saveContext()
     }
     
     // MARK: Add pins to the map. Used by the UILongPressGestureRecognizer
@@ -54,16 +106,13 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate {
         switch recognizer.state {
         case .Began:
             // Create a new Pin for the point that was touched on the map.
-            let pin = Pin(latitude: coordinate.latitude, longitude: coordinate.longitude, photos: [Photo]())
-            currentAnnotation = Annotation(pin: pin)
-            currentAnnotation?.coordinate = coordinate
-            
-            // Add the annotation to the map.
-            mapView.addAnnotation(currentAnnotation!)
+            let pin = Pin(latitude: coordinate.latitude, longitude: coordinate.longitude, context: context)
+            currentPin = pin
         case .Changed:
-            currentAnnotation?.coordinate = coordinate
+            currentPin?.latitude = coordinate.latitude
+            currentPin?.longitude = coordinate.longitude
         case .Ended:
-            pins.append(currentAnnotation!.pin)
+            saveContext()
         default:
             return
         }
@@ -95,6 +144,33 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate {
         print("didSelectAnnotationView")
         mapView.deselectAnnotation(view.annotation!, animated: true)
         performSegueWithIdentifier("showPhotoAlbumViewController", sender: [Photo]())
+    }
+    
+    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        let region = [
+            RegionLatitude: mapView.region.center.latitude,
+            RegionLongitude: mapView.region.center.longitude,
+            RegionLatitudeDelta: mapView.region.span.latitudeDelta,
+            RegionLongitudeDelta: mapView.region.span.longitudeDelta
+        ]
+        NSUserDefaults.standardUserDefaults().setObject(region, forKey: Region)
+    }
+    
+    // MARK: NSFetchedResultsControllerDelegateMethods
+    
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+        
+        switch(type) {
+        case .Insert:
+            mapView.addAnnotation(anObject as! Pin)
+        case .Delete:
+            mapView.removeAnnotation(anObject as! Pin)
+        case .Update:
+            mapView.removeAnnotation(anObject as! Pin)
+            mapView.addAnnotation(anObject as! Pin)
+        default:
+            break
+        }
     }
 }
 

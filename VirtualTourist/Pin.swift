@@ -6,17 +6,30 @@
 //  Copyright © 2016 Wouter. All rights reserved.
 //
 
-import Foundation
+import CoreData
+import MapKit
 
-class Pin: NSObject {
+class Pin: NSManagedObject, MKAnnotation {
     
-    var latitude: Double
-    var longitude: Double
-    var photos = [Photo]()
+    @NSManaged var latitude: NSNumber
+    @NSManaged var longitude: NSNumber
+    @NSManaged var photos: [Photo]
     
-    init(latitude: Double, longitude: Double, photos: [Photo]) {
-        self.latitude = latitude
-        self.longitude = longitude
-        self.photos = photos
+    var coordinate: CLLocationCoordinate2D {
+        let coord = CLLocationCoordinate2D(latitude: Double(latitude), longitude: Double(longitude))
+        return coord
+    }
+    
+    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
+        super.init(entity: entity, insertIntoManagedObjectContext: context)
+    }
+    
+    init(latitude: Double, longitude: Double, context: NSManagedObjectContext) {
+        
+        let entity = NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
+        super.init(entity: entity, insertIntoManagedObjectContext: context)
+        
+        self.latitude = latitude as NSNumber
+        self.longitude = longitude as NSNumber
     }
 }
