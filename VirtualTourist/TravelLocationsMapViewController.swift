@@ -87,7 +87,6 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         let region = MKCoordinateRegion(center: center, span: span)
         mapView.region = region
         mapView.setCenterCoordinate(center, animated: true)
-//        mapView.setRegion(region, animated: true)
     }
     
     // MARK: Convenience method for saving the managed object context.
@@ -143,7 +142,8 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
         print("didSelectAnnotationView")
         mapView.deselectAnnotation(view.annotation!, animated: true)
-        performSegueWithIdentifier("showPhotoAlbumViewController", sender: [Photo]())
+        let pin = view.annotation as! Pin
+        performSegueWithIdentifier("showPhotoAlbumViewController", sender: pin)
     }
     
     func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
