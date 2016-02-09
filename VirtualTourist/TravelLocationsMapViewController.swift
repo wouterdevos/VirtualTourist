@@ -18,6 +18,8 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     let RegionLatitudeDelta = "latitudeDelta"
     let RegionLongitudeDelta = "longitudeDelta"
     
+    let ShowPhotoAlbumViewController = "showPhotoAlbumViewController"
+    
     var longPressGestureRecognizer: UILongPressGestureRecognizer? = nil
     var currentPin: Pin? = nil
     var pins = [Pin]()
@@ -54,7 +56,13 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     }
 
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        if segue.identifier == "showPhotoAlbumViewController" {
+        if segue.identifier == ShowPhotoAlbumViewController {
+            // Configure the back button.
+            let backBarButtonItem = UIBarButtonItem()
+            backBarButtonItem.title = "OK"
+            navigationItem.backBarButtonItem = backBarButtonItem
+            
+            // Configure the photo album view controller.
             let photoAlbumViewController = segue.destinationViewController as! PhotoAlbumViewController
             let pin = sender as! Pin
             photoAlbumViewController.pin = pin
@@ -72,7 +80,8 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     }
     
     func fetchRegion() {
-        guard let storedRegion = NSUserDefaults.standardUserDefaults().objectForKey(Region) as? [String:AnyObject] else {
+        let userDefaults = NSUserDefaults.standardUserDefaults()
+        guard let storedRegion = userDefaults.objectForKey(Region) as? [String:AnyObject] else {
             print("No region stored in user defaults")
             return
         }
@@ -140,10 +149,9 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     }
     
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
-        print("didSelectAnnotationView")
         mapView.deselectAnnotation(view.annotation!, animated: true)
         let pin = view.annotation as! Pin
-        performSegueWithIdentifier("showPhotoAlbumViewController", sender: pin)
+        performSegueWithIdentifier(ShowPhotoAlbumViewController, sender: pin)
     }
     
     func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {

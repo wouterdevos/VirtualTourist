@@ -134,6 +134,7 @@
 		104E73F11C66B9580091064D /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				106D16551C5963470042EBC3 /* Main.storyboard */,
 				106D16511C5963470042EBC3 /* AppDelegate.swift */,
 				106D165B1C5963470042EBC3 /* Assets.xcassets */,
 				106D165D1C5963470042EBC3 /* LaunchScreen.storyboard */,
@@ -169,7 +170,6 @@
 				104E73F01C66B8F00091064D /* Core Data */,
 				104E73EF1C66B8CE0091064D /* View Controllers */,
 				101BBE861C61332700860134 /* REST Client */,
-				106D16551C5963470042EBC3 /* Main.storyboard */,
 				101BBE871C61510900860134 /* DataModel.swift */,
 			);
 			path = VirtualTourist;
