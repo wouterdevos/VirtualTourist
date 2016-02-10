@@ -68,4 +68,13 @@ class ImageCache {
         
         return fullURL.path!
     }
+    
+    class func sharedInstance() -> ImageCache {
+        
+        struct Singleton {
+            static var sharedInstance = ImageCache()
+        }
+        
+        return Singleton.sharedInstance
+    }
 }

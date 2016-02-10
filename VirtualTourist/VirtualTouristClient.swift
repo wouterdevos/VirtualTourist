@@ -11,7 +11,7 @@ import MapKit
 
 class VirtualTouristClient : NSObject {
     
-    func searchPhotos(latitude: Double, longitude: Double, completionHandler: (result: AnyObject?, errorString: String?) -> Void) {
+    func taskForPhotosSearch(latitude: Double, longitude: Double, completionHandler: (result: AnyObject?, errorString: String?) -> Void) {
             
         // Specify the header fields and query parameters.
         let headerFields = [String:String]()
@@ -72,6 +72,19 @@ class VirtualTouristClient : NSObject {
         }
     }
     
+    func taskForImageDownload(photo: Photo, completionHandler: (imageData: NSData?, errorString: String?) -> Void) {
+        
+        let restClient = RESTClient.sharedInstance()
+        restClient.taskForGETMethod(photo.url, headerFields: [String:String](), queryParameters: nil) { (data, error) in
+            
+            if let _ = error {
+                completionHandler(imageData: nil, errorString: "Failed to download photo with url \(photo.url)")
+            } else {
+                completionHandler(imageData: data, errorString: nil)
+            }
+        }
+    }
+    
     func createBoundingBoxString(latitude: Double, longitude: Double) -> String {
         
         // Fix added to ensure box is bounded by minimum and maximums.
@@ -81,5 +94,14 @@ class VirtualTouristClient : NSObject {
         let topRightLat = min(latitude + Constants.BOUNDING_BOX_HALF_HEIGHT, Constants.LAT_MAX)
         
         return "\(bottomLeftLon),\(bottomLeftLat),\(topRightLon),\(topRightLat)"
+    }
+    
+    class func sharedInstance() -> VirtualTouristClient {
+        
+        struct Singleton {
+            static var sharedInstance = VirtualTouristClient()
+        }
+        
+        return Singleton.sharedInstance
     }
 }

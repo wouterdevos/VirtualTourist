@@ -6,6 +6,7 @@
 //  Copyright © 2016 Wouter. All rights reserved.
 //
 
+import UIKit
 import CoreData
 
 class Photo: NSManagedObject {
@@ -41,5 +42,15 @@ class Photo: NSManagedObject {
         url = dictionary[Keys.URL] as! String
         height = dictionary[Keys.Height] as! String
         width = dictionary[Keys.Width] as! String
+    }
+    
+    var image: UIImage? {
+        get {
+            return ImageCache.sharedInstance().imageWithIdentifier(id)
+        }
+        
+        set {
+            ImageCache.sharedInstance().storeImage(newValue, withIdentifier: id)
+        }
     }
 }

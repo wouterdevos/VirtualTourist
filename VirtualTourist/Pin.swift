@@ -32,4 +32,12 @@ class Pin: NSManagedObject, MKAnnotation {
         self.latitude = latitude as NSNumber
         self.longitude = longitude as NSNumber
     }
+    
+    func getLatitude() -> Double {
+        return Double(latitude)
+    }
+    
+    func getLongitude() -> Double {
+        return Double(longitude)
+    }
 }
