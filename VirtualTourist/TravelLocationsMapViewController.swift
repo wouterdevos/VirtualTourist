@@ -120,6 +120,8 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
             currentPin?.latitude = coordinate.latitude
             currentPin?.longitude = coordinate.longitude
         case .Ended:
+            let userInfo: [String:AnyObject] = ["pin": currentPin!]
+            NSNotificationCenter.defaultCenter().postNotificationName(DataModel.NotificationNames.SearchPhotos, object: nil, userInfo: userInfo)
             saveContext()
         default:
             return

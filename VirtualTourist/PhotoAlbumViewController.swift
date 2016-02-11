@@ -15,9 +15,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     let spanDelta = 0.03
     
     var pin: Pin!
-    var insertedIndexPaths: [NSIndexPath]!
-    var deletedIndexPaths: [NSIndexPath]!
-    var updatedIndexPaths: [NSIndexPath]!
+    var blockOperations: [NSBlockOperation] = []
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
@@ -43,6 +41,10 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Configure notifications
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "searchPhotosCompleted", name: DataModel.NotificationNames.SearchPhotosCompleted, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "photoDownloadCompleted", name: DataModel.NotificationNames.PhotoDownloadCompleted, object: nil)
         
         // Configure the map view.
         let latitude = Double(pin.latitude)
@@ -71,6 +73,27 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         collectionView.dataSource = self
         collectionView.setCollectionViewLayout(layout, animated: true)
         collectionView.registerClass(PhotoCollectionViewCell.self, forCellWithReuseIdentifier: "PhotoCollectionViewCell")
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        let userInfo: [String:AnyObject] = ["pin": pin]
+        NSNotificationCenter.defaultCenter().postNotificationName(DataModel.NotificationNames.SearchPhotos, object: nil, userInfo: userInfo)
+    }
+    
+    // MARK: NSNotification observer methods
+    
+    func searchPhotosCompleted() {
+        dispatch_async(dispatch_get_main_queue()){
+            self.collectionView.reloadData()
+        }
+    }
+    
+    func photoDownloadCompleted() {
+        dispatch_async(dispatch_get_main_queue()){
+            self.collectionView.reloadData()
+        }
     }
     
     // MARK: MKMapViewDelegate methods.
@@ -125,47 +148,86 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     // MARK: NSFetchedResultsControllerDelegateMethods
     
     func controllerWillChangeContent(controller: NSFetchedResultsController) {
-        insertedIndexPaths = [NSIndexPath]()
-        deletedIndexPaths = [NSIndexPath]()
-        updatedIndexPaths = [NSIndexPath]()
+        blockOperations.removeAll(keepCapacity: false)
+    }
+    
+    func controller(controller: NSFetchedResultsController, didChangeSection sectionInfo: NSFetchedResultsSectionInfo, atIndex sectionIndex: Int, forChangeType type: NSFetchedResultsChangeType) {
+        
+        switch type {
+        case .Insert:
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                    if let this = self {
+                        this.collectionView!.insertSections(NSIndexSet(index: sectionIndex))
+                    }
+                    })
+            )
+        case .Delete:
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                    if let this = self {
+                        this.collectionView!.deleteSections(NSIndexSet(index: sectionIndex))
+                    }
+                })
+            )
+        default:
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                        if let this = self {
+                            this.collectionView!.reloadSections(NSIndexSet(index: sectionIndex))
+                        }
+                    })
+            )
+        }
     }
     
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         
         switch type {
         case .Insert:
-            insertedIndexPaths.append(newIndexPath!)
-            break
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                        if let this = self {
+                            this.collectionView!.insertItemsAtIndexPaths([newIndexPath!])
+                        }
+                })
+            )
         case .Delete:
-            deletedIndexPaths.append(indexPath!)
-            break
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                        if let this = self {
+                            this.collectionView!.deleteItemsAtIndexPaths([indexPath!])
+                        }
+                })
+            )
         case .Update:
-            updatedIndexPaths.append(indexPath!)
-        default:
-            break
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                        if let this = self {
+                            this.collectionView!.reloadItemsAtIndexPaths([indexPath!])
+                        }
+                    })
+            )
+        case .Move:
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                        if let this = self {
+                            this.collectionView!.moveItemAtIndexPath(indexPath!, toIndexPath: newIndexPath!)
+                        }
+                    })
+            )
         }
     }
     
     func controllerDidChangeContent(controller: NSFetchedResultsController) {
         
-        for i in insertedIndexPaths {
-            let pin: AnyObject? = fetchedResultsController.fetchedObjects?[i.row]
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = CLLocationCoordinate2DMake(pin!.latitude as Double, pin!.longitude as Double)
-            annotation.pin = fetchedResultsController.objectAtIndexPath(i) as! Pin
-            mapView.addAnnotation(annotation)
-        }
-        
-        for i in deletedIndexPaths {
-            let pin: AnyObject? = fetchedResultsController.fetchedObjects?[i.row]
-            let annotation = annotationForPin(pin)
-            mapView.removeAnnotation(annotation)
-        }
-        
-        for i in updatedIndexPaths {
-            var pin: AnyObject? = fetchedResultsController.fetchedObjects?[i.row]
-            annotationForPin(pin).coordinate = CLLocationCoordinate2DMake(pin!.latitude as Double, pin!.longitude as Double)
-        }
+        collectionView.performBatchUpdates({ () -> Void in
+            for blockOperation in self.blockOperations {
+                blockOperation.start()
+            }
+        }, completion: { (finished) -> Void in
+            self.blockOperations.removeAll(keepCapacity: false)
+        })
         
     }
 }

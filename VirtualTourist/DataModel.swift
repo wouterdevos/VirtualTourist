@@ -35,7 +35,10 @@ class DataModel {
         NSNotificationCenter.defaultCenter().removeObserver(self)
     }
     
-    func searchPhotos(pin: Pin) {
+    func searchPhotos(notification: NSNotification) {
+        let userInfo = notification.userInfo as! [String:AnyObject]
+        let pin = userInfo["pin"] as! Pin
+        
         let client = VirtualTouristClient.sharedInstance()
         client.taskForPhotosSearch(pin.getLatitude(), longitude: pin.getLongitude()) { (result, errorString) in
             
