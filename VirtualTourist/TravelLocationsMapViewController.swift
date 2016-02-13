@@ -46,6 +46,9 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // This call is necessary to initialise the DataModel's observers.
+        DataModel.sharedInstance()
+        
         longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: "addPin:")
         mapView.addGestureRecognizer(longPressGestureRecognizer!)
         mapView.delegate = self
@@ -120,9 +123,9 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
             currentPin?.latitude = coordinate.latitude
             currentPin?.longitude = coordinate.longitude
         case .Ended:
+            saveContext()
             let userInfo: [String:AnyObject] = ["pin": currentPin!]
             NSNotificationCenter.defaultCenter().postNotificationName(DataModel.NotificationNames.SearchPhotos, object: nil, userInfo: userInfo)
-            saveContext()
         default:
             return
         }

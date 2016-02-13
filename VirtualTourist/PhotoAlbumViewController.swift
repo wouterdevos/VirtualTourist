@@ -73,19 +73,32 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         collectionView.dataSource = self
         collectionView.setCollectionViewLayout(layout, animated: true)
         collectionView.registerClass(PhotoCollectionViewCell.self, forCellWithReuseIdentifier: "PhotoCollectionViewCell")
+        
+        fetchedResultsController.delegate = self
+        
+        fetchPhotos()
     }
     
-    override func viewWillAppear(animated: Bool) {
-        super.viewWillAppear(animated)
-        
-        let userInfo: [String:AnyObject] = ["pin": pin]
-        NSNotificationCenter.defaultCenter().postNotificationName(DataModel.NotificationNames.SearchPhotos, object: nil, userInfo: userInfo)
+//    override func viewWillAppear(animated: Bool) {
+//        super.viewWillAppear(animated)
+//        
+//        let userInfo: [String:AnyObject] = ["pin": pin]
+//        NSNotificationCenter.defaultCenter().postNotificationName(DataModel.NotificationNames.SearchPhotos, object: nil, userInfo: userInfo)
+//    }
+    
+    // MARK: Fetch photos
+    
+    func fetchPhotos() {
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {}
     }
     
     // MARK: NSNotification observer methods
     
     func searchPhotosCompleted() {
         dispatch_async(dispatch_get_main_queue()){
+            self.fetchPhotos()
             self.collectionView.reloadData()
         }
     }
@@ -131,11 +144,13 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let photoCollectionViewCell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCollectionViewCell", forIndexPath: indexPath) as! PhotoCollectionViewCell
+        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
         
-        let red = randomColor()
-        let green = randomColor()
-        let blue = randomColor()
-        photoCollectionViewCell.backgroundColor = UIColor(red: red, green: green, blue: blue, alpha: 1)
+//        let red = randomColor()
+//        let green = randomColor()
+//        let blue = randomColor()
+//        photoCollectionViewCell.backgroundColor = UIColor(red: red, green: green, blue: blue, alpha: 1)
+        configureCell(photoCollectionViewCell, photo: photo)
         
         return photoCollectionViewCell
     }
@@ -143,6 +158,22 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     func randomColor() -> CGFloat {
         let random = Double(arc4random() % 255) / 255.0
         return CGFloat(random)
+    }
+    
+    // MARK: - Configure Cell
+    
+    func configureCell(cell: PhotoCollectionViewCell, photo: Photo) {
+        var placeholderImage = UIImage(named: "placeholder")
+        
+        cell.photoImageView.image = nil
+        
+        // Set the Movie Poster Image
+        
+        if photo.image != nil {
+            placeholderImage = photo.image!
+        }
+        
+        cell.photoImageView.image = placeholderImage
     }
     
     // MARK: NSFetchedResultsControllerDelegateMethods

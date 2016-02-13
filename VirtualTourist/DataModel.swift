@@ -9,7 +9,7 @@
 import UIKit
 import CoreData
 
-class DataModel {
+class DataModel: NSObject {
     
     struct NotificationNames {
         static let SearchPhotos = "com.wouterdevos.SearchPhotos"
@@ -23,7 +23,8 @@ class DataModel {
         return CoreDataStackManager.sharedInstance().managedObjectContext
     }
     
-    init() {
+    override init() {
+        super.init()
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "searchPhotos:", name: NotificationNames.SearchPhotos, object: nil)
     }
     

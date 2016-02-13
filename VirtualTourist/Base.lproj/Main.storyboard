@@ -149,7 +149,7 @@
                                             </mask>
                                         </variation>
                                         <connections>
-                                            <outlet property="photoImageView" destination="t5R-Ow-G56" id="8Ol-vE-Zgv"/>
+                                            <outlet property="photoImageView" destination="t5R-Ow-G56" id="mZp-G5-XEW"/>
                                         </connections>
                                     </collectionViewCell>
                                 </cells>

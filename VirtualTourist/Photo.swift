@@ -13,10 +13,10 @@ class Photo: NSManagedObject {
     
     struct Keys {
         static let ID = "id"
-        static let Title = "Title"
+        static let Title = "title"
         static let URL = "url_m"
-        static let Height = "height"
-        static let Width = "width"
+        static let Height = "height_m"
+        static let Width = "width_m"
     }
     
     @NSManaged var id: String
