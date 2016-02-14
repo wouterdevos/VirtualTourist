@@ -75,12 +75,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="CKj-xZ-jdn">
-                                <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
-                                <items>
-                                    <barButtonItem title="New Collection" width="390" style="plain" id="1xc-Hk-xQF"/>
-                                </items>
-                            </toolbar>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="3s3-eK-xdH">
                                 <rect key="frame" x="0.0" y="0.0" width="240" height="128"/>
                                 <constraints>
@@ -114,7 +108,7 @@
                                             <rect key="frame" x="0.0" y="0.0" width="100" height="100"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="t5R-Ow-G56">
+                                                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="t5R-Ow-G56">
                                                     <rect key="frame" x="0.0" y="0.0" width="240" height="128"/>
                                                 </imageView>
                                             </subviews>
@@ -154,9 +148,28 @@
                                     </collectionViewCell>
                                 </cells>
                             </collectionView>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="CKj-xZ-jdn">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                                <items>
+                                    <barButtonItem title="New Collection" width="390" style="plain" id="1xc-Hk-xQF">
+                                        <connections>
+                                            <action selector="newCollection:" destination="KYc-By-4CF" id="aJ7-Bh-EQN"/>
+                                        </connections>
+                                    </barButtonItem>
+                                </items>
+                            </toolbar>
+                            <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No Images" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QgR-ZV-jjM">
+                                <rect key="frame" x="-42" y="-21" width="42" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
+                            <constraint firstItem="QgR-ZV-jjM" firstAttribute="centerX" secondItem="PnH-5N-VFJ" secondAttribute="centerX" id="4k7-IZ-rcq">
+                                <variation key="widthClass=compact" constant="0.0"/>
+                            </constraint>
                             <constraint firstItem="3s3-eK-xdH" firstAttribute="leading" secondItem="PnH-5N-VFJ" secondAttribute="leadingMargin" constant="-20" id="4t0-Of-3BW"/>
                             <constraint firstAttribute="trailingMargin" secondItem="3s3-eK-xdH" secondAttribute="trailing" constant="-20" id="7FB-dO-9VU"/>
                             <constraint firstAttribute="trailingMargin" secondItem="CKj-xZ-jdn" secondAttribute="trailing" constant="-20" id="Bxx-HD-VZe"/>
@@ -167,15 +180,19 @@
                             <constraint firstItem="I9v-Ku-FnL" firstAttribute="top" secondItem="CKj-xZ-jdn" secondAttribute="bottom" id="ROA-oP-eus"/>
                             <constraint firstItem="Egy-AJ-VrQ" firstAttribute="leading" secondItem="PnH-5N-VFJ" secondAttribute="leadingMargin" constant="-20" id="Tm8-Qo-GwK"/>
                             <constraint firstItem="3s3-eK-xdH" firstAttribute="top" secondItem="kQH-g0-onL" secondAttribute="bottom" id="ghe-dT-dL1"/>
+                            <constraint firstItem="QgR-ZV-jjM" firstAttribute="centerY" secondItem="PnH-5N-VFJ" secondAttribute="centerY" id="uE2-RR-Mzr"/>
                         </constraints>
                         <variation key="default">
                             <mask key="subviews">
-                                <exclude reference="CKj-xZ-jdn"/>
                                 <exclude reference="3s3-eK-xdH"/>
                                 <exclude reference="Egy-AJ-VrQ"/>
+                                <exclude reference="CKj-xZ-jdn"/>
+                                <exclude reference="QgR-ZV-jjM"/>
                             </mask>
                             <mask key="constraints">
                                 <exclude reference="ROA-oP-eus"/>
+                                <exclude reference="4k7-IZ-rcq"/>
+                                <exclude reference="uE2-RR-Mzr"/>
                                 <exclude reference="Bxx-HD-VZe"/>
                                 <exclude reference="Cqh-nT-Cqt"/>
                                 <exclude reference="Olp-6a-mse"/>
@@ -189,12 +206,15 @@
                         </variation>
                         <variation key="widthClass=compact">
                             <mask key="subviews">
-                                <include reference="CKj-xZ-jdn"/>
                                 <include reference="3s3-eK-xdH"/>
                                 <include reference="Egy-AJ-VrQ"/>
+                                <include reference="CKj-xZ-jdn"/>
+                                <include reference="QgR-ZV-jjM"/>
                             </mask>
                             <mask key="constraints">
                                 <include reference="ROA-oP-eus"/>
+                                <include reference="4k7-IZ-rcq"/>
+                                <include reference="uE2-RR-Mzr"/>
                                 <include reference="Bxx-HD-VZe"/>
                                 <include reference="Cqh-nT-Cqt"/>
                                 <include reference="Olp-6a-mse"/>
@@ -211,6 +231,8 @@
                     <connections>
                         <outlet property="collectionView" destination="Egy-AJ-VrQ" id="5Tb-4y-BBr"/>
                         <outlet property="mapView" destination="3s3-eK-xdH" id="3bX-gH-L65"/>
+                        <outlet property="messageLabel" destination="QgR-ZV-jjM" id="a0a-aY-NCW"/>
+                        <outlet property="newCollectionBarButtonItem" destination="1xc-Hk-xQF" id="3Pc-s5-gqm"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="EwY-36-L35" userLabel="First Responder" sceneMemberID="firstResponder"/>

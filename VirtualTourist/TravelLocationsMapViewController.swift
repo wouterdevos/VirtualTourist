@@ -22,7 +22,7 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
     var longPressGestureRecognizer: UILongPressGestureRecognizer? = nil
     var currentPin: Pin? = nil
-    var pins = [Pin]()
+    var isDragging = false
     
     @IBOutlet var mapView: MKMapView!
     
@@ -53,11 +53,14 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         mapView.addGestureRecognizer(longPressGestureRecognizer!)
         mapView.delegate = self
         fetchedResultsController.delegate = self
-        
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
         fetchPins()
         fetchRegion()
     }
-
+    
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == ShowPhotoAlbumViewController {
             // Configure the back button.
@@ -72,7 +75,7 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         }
     }
     
-    // MARK: Fetch the pins and the map region.
+    // MARK: - Fetch the pins and the map region.
     
     func fetchPins() {
         do {
@@ -101,13 +104,13 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         mapView.setCenterCoordinate(center, animated: true)
     }
     
-    // MARK: Convenience method for saving the managed object context.
+    // MARK: - Convenience method for saving the managed object context.
     
     func saveContext() {
         CoreDataStackManager.sharedInstance().saveContext()
     }
     
-    // MARK: Add pins to the map. Used by the UILongPressGestureRecognizer
+    // MARK: - Add pins to the map. Used by the UILongPressGestureRecognizer
     
     func addPin(recognizer: UILongPressGestureRecognizer) {
         // Get the touch point from the UILongPressGestureRecognizer and convert it to coordinates on the map view.
@@ -119,9 +122,9 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
             // Create a new Pin for the point that was touched on the map.
             let pin = Pin(latitude: coordinate.latitude, longitude: coordinate.longitude, context: context)
             currentPin = pin
-        case .Changed:
-            currentPin?.latitude = coordinate.latitude
-            currentPin?.longitude = coordinate.longitude
+//        case .Changed:
+//            currentPin?.latitude = coordinate.latitude
+//            currentPin?.longitude = coordinate.longitude
         case .Ended:
             saveContext()
             let userInfo: [String:AnyObject] = ["pin": currentPin!]
@@ -131,7 +134,21 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         }
     }
     
-    // MARK: MKMapViewDelegate methods
+    // MARK: - MKMapViewDelegate methods
+    
+    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
+        let pin = view.annotation as! Pin
+        
+        if newState == .Ending {
+            pin.latitude = pin.coordinate.latitude
+            pin.longitude = pin.coordinate.longitude
+        }
+    }
+    
+    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
+        let pin = view.annotation as! Pin
+        performSegueWithIdentifier(ShowPhotoAlbumViewController, sender: pin)
+    }
     
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         let reuseId = "pin"
@@ -142,8 +159,10 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
             // Create a new pin view and initialise it.
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             pinView!.pinTintColor = MKPinAnnotationView.redPinColor()
+            pinView!.rightCalloutAccessoryView =  UIButton(type: UIButtonType.DetailDisclosure)
             pinView!.draggable = true
             pinView!.animatesDrop = true
+            pinView!.canShowCallout = true
         }
         else {
             // Reuse an existing pin view and set the annotation.
@@ -153,11 +172,11 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         return pinView
     }
     
-    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
-        mapView.deselectAnnotation(view.annotation!, animated: true)
-        let pin = view.annotation as! Pin
-        performSegueWithIdentifier(ShowPhotoAlbumViewController, sender: pin)
-    }
+//    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
+//        mapView.deselectAnnotation(view.annotation!, animated: true)
+//        let pin = view.annotation as! Pin
+//        performSegueWithIdentifier(ShowPhotoAlbumViewController, sender: pin)
+//    }
     
     func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         let region = [
@@ -169,7 +188,7 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         NSUserDefaults.standardUserDefaults().setObject(region, forKey: Region)
     }
     
-    // MARK: NSFetchedResultsControllerDelegateMethods
+    // MARK: - NSFetchedResultsControllerDelegateMethods
     
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         

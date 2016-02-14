@@ -11,19 +11,20 @@ import MapKit
 
 class VirtualTouristClient : NSObject {
     
-    func taskForPhotosSearch(latitude: Double, longitude: Double, completionHandler: (result: AnyObject?, errorString: String?) -> Void) {
+    func taskForPhotosSearch(pin: Pin, completionHandler: (result: AnyObject?, errorString: String?) -> Void) {
             
         // Specify the header fields and query parameters.
         let headerFields = [String:String]()
         let queryParameters: [String:AnyObject] = [
             QueryKeys.APIKey: Constants.FlickrAPIKey,
             QueryKeys.Method: Methods.PhotosSearch,
-            QueryKeys.BBox: createBoundingBoxString(latitude, longitude: longitude),
+            QueryKeys.BBox: createBoundingBoxString(pin.getLatitude(), longitude: pin.getLongitude()),
             QueryKeys.SafeSearch: Constants.SafeSearch,
             QueryKeys.Extras: Constants.Extras,
             QueryKeys.Format: Constants.DataFormat,
             QueryKeys.NoJSONCallback: Constants.NoJSONCallback,
-            QueryKeys.PerPage: Constants.PerPage
+            QueryKeys.PerPage: Constants.PerPage,
+            QueryKeys.Page: pin.page
         ]
         
         // Create url.

@@ -10,15 +10,21 @@ import UIKit
 import MapKit
 import CoreData
 
-class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectionViewDataSource, NSFetchedResultsControllerDelegate {
+class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, NSFetchedResultsControllerDelegate {
+    
+    let NoImagesMessage = "No Images"
+    let DownloadingMessage = "Downloading..."
     
     let spanDelta = 0.03
+    let defaultCenter = NSNotificationCenter.defaultCenter()
     
     var pin: Pin!
     var blockOperations: [NSBlockOperation] = []
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var newCollectionBarButtonItem: UIBarButtonItem!
+    @IBOutlet weak var messageLabel: UILabel!
     
     var context: NSManagedObjectContext {
         return CoreDataStackManager.sharedInstance().managedObjectContext
@@ -39,12 +45,24 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         return fetchedResultsController
     }()
     
+    @IBAction func newCollection(sender: AnyObject) {
+        // Delete all photos for this pin and save the context.
+        var page = pin.page.intValue
+        pin.page = NSNumber(int: ++page)
+        for photo in fetchedResultsController.fetchedObjects! as! [Photo] {
+            context.deleteObject(photo)
+        }
+        saveContext()
+        
+        // Send a notification to download a
+        let userInfo: [String:AnyObject] = ["pin": pin!]
+        NSNotificationCenter.defaultCenter().postNotificationName(DataModel.NotificationNames.SearchPhotos, object: nil, userInfo: userInfo)
+        
+       toggleMessageLabel(DownloadingMessage)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Configure notifications
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "searchPhotosCompleted", name: DataModel.NotificationNames.SearchPhotosCompleted, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "photoDownloadCompleted", name: DataModel.NotificationNames.PhotoDownloadCompleted, object: nil)
         
         // Configure the map view.
         let latitude = Double(pin.latitude)
@@ -71,22 +89,39 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         layout.minimumLineSpacing = 0
         
         collectionView.dataSource = self
+        collectionView.delegate = self
         collectionView.setCollectionViewLayout(layout, animated: true)
-        collectionView.registerClass(PhotoCollectionViewCell.self, forCellWithReuseIdentifier: "PhotoCollectionViewCell")
         
         fetchedResultsController.delegate = self
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        // Add notification observers.
+        addObservers()
         
         fetchPhotos()
     }
     
-//    override func viewWillAppear(animated: Bool) {
-//        super.viewWillAppear(animated)
-//        
-//        let userInfo: [String:AnyObject] = ["pin": pin]
-//        NSNotificationCenter.defaultCenter().postNotificationName(DataModel.NotificationNames.SearchPhotos, object: nil, userInfo: userInfo)
-//    }
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        // Remove notification observers.
+        removeObservers()
+    }
     
-    // MARK: Fetch photos
+    // MARK: - Add and remove observers for NSNotifications.
+    
+    func addObservers() {
+        defaultCenter.addObserver(self, selector: "searchPhotosCompleted", name: DataModel.NotificationNames.SearchPhotosCompleted, object: nil)
+        defaultCenter.addObserver(self, selector: "photoDownloadCompleted", name: DataModel.NotificationNames.PhotoDownloadCompleted, object: nil)
+    }
+    
+    func removeObservers() {
+        defaultCenter.removeObserver(self, name: DataModel.NotificationNames.SearchPhotosCompleted, object: nil)
+        defaultCenter.removeObserver(self, name: DataModel.NotificationNames.PhotoDownloadCompleted, object: nil)
+    }
+    
+    // MARK: - Fetch photos
     
     func fetchPhotos() {
         do {
@@ -94,10 +129,18 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         } catch {}
     }
     
-    // MARK: NSNotification observer methods
+    // MARK: - Convenience method for saving the managed object context.
+    
+    func saveContext() {
+        CoreDataStackManager.sharedInstance().saveContext()
+    }
+    
+    // MARK: - NSNotification observer methods
     
     func searchPhotosCompleted() {
         dispatch_async(dispatch_get_main_queue()){
+            let count = self.pin.photos.count
+            self.toggleMessageLabel(count == 0 ? self.NoImagesMessage : nil)
             self.fetchPhotos()
             self.collectionView.reloadData()
         }
@@ -109,7 +152,16 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         }
     }
     
-    // MARK: MKMapViewDelegate methods.
+    // MARK: - Toggle the message label.
+    
+    func toggleMessageLabel(message: String?) {
+        messageLabel.hidden = message == nil
+        if let message = message {
+            messageLabel.text = message
+        }
+    }
+    
+    // MARK: - MKMapViewDelegate methods.
     
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         let reuseId = "pin"
@@ -131,7 +183,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         return pinView
     }
     
-    // MARK: UICollectionViewDataSource methods.
+    // MARK: - UICollectionViewDataSource methods.
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
         return fetchedResultsController.sections?.count ?? 0
@@ -146,34 +198,32 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         let photoCollectionViewCell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCollectionViewCell", forIndexPath: indexPath) as! PhotoCollectionViewCell
         let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
         
-//        let red = randomColor()
-//        let green = randomColor()
-//        let blue = randomColor()
-//        photoCollectionViewCell.backgroundColor = UIColor(red: red, green: green, blue: blue, alpha: 1)
         configureCell(photoCollectionViewCell, photo: photo)
         
         return photoCollectionViewCell
     }
     
-    func randomColor() -> CGFloat {
-        let random = Double(arc4random() % 255) / 255.0
-        return CGFloat(random)
+    // MARK: - UICollectionViewDelegate methods.
+    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        context.deleteObject(photo)
+        saveContext()
     }
     
     // MARK: - Configure Cell
     
     func configureCell(cell: PhotoCollectionViewCell, photo: Photo) {
-        var placeholderImage = UIImage(named: "placeholder")
+        var photoImage = UIImage(named: "placeholder")
         
         cell.photoImageView.image = nil
         
-        // Set the Movie Poster Image
-        
+        // Set the Photo image
         if photo.image != nil {
-            placeholderImage = photo.image!
+            photoImage = photo.image!
         }
         
-        cell.photoImageView.image = placeholderImage
+        cell.photoImageView.image = photoImage
     }
     
     // MARK: NSFetchedResultsControllerDelegateMethods

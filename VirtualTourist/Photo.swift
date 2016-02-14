@@ -30,6 +30,10 @@ class Photo: NSManagedObject {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
     
+    override func prepareForDeletion() {
+        ImageCache.sharedInstance().deleteImage(id)
+    }
+    
     init(dictionary: [String:AnyObject], context: NSManagedObjectContext) {
         
         // Core Data

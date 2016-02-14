@@ -41,7 +41,7 @@ class DataModel: NSObject {
         let pin = userInfo["pin"] as! Pin
         
         let client = VirtualTouristClient.sharedInstance()
-        client.taskForPhotosSearch(pin.getLatitude(), longitude: pin.getLongitude()) { (result, errorString) in
+        client.taskForPhotosSearch(pin) { (result, errorString) in
             
             guard let photosArray = result as? [[String:AnyObject]] else {
                 print(errorString)

@@ -13,7 +13,9 @@ class Pin: NSManagedObject, MKAnnotation {
     
     @NSManaged var latitude: NSNumber
     @NSManaged var longitude: NSNumber
+    @NSManaged var page: NSNumber
     @NSManaged var photos: [Photo]
+    var title: String?
     
     var coordinate: CLLocationCoordinate2D {
         let coord = CLLocationCoordinate2D(latitude: Double(latitude), longitude: Double(longitude))
@@ -31,6 +33,8 @@ class Pin: NSManagedObject, MKAnnotation {
         
         self.latitude = latitude as NSNumber
         self.longitude = longitude as NSNumber
+        self.page = 1
+        title = "Pin"
     }
     
     func getLatitude() -> Double {
