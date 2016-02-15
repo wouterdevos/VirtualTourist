@@ -71,13 +71,17 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         let span = MKCoordinateSpan(latitudeDelta: spanDelta, longitudeDelta: spanDelta)
         let region = MKCoordinateRegion(center: center, span: span)
         
+        let coordinate = CLLocationCoordinate2D(latitude: pin.getLatitude(), longitude: pin.getLongitude())
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        
         mapView.delegate = self
         mapView.zoomEnabled = false
         mapView.scrollEnabled = false
         mapView.pitchEnabled = false
         mapView.rotateEnabled = false
-        mapView.addAnnotation(pin)
-        mapView.centerCoordinate = pin.coordinate
+        mapView.addAnnotation(annotation)
+        mapView.centerCoordinate = annotation.coordinate
         mapView.region = region
         
         // Configure the collection view.

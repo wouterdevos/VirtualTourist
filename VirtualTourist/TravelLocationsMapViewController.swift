@@ -22,6 +22,7 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
     var longPressGestureRecognizer: UILongPressGestureRecognizer? = nil
     var currentPin: Pin? = nil
+    var currentAnnotation: PinAnnotation? = nil
     var isDragging = false
     
     @IBOutlet var mapView: MKMapView!
@@ -75,6 +76,12 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         }
     }
     
+    // MARK: - Convenience method for saving the managed object context.
+    
+    func saveContext() {
+        CoreDataStackManager.sharedInstance().saveContext()
+    }
+    
     // MARK: - Fetch the pins and the map region.
     
     func fetchPins() {
@@ -82,7 +89,8 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
             try fetchedResultsController.performFetch()
         } catch {}
         
-        mapView.addAnnotations(fetchedResultsController.fetchedObjects as! [Pin])
+        let pins = fetchedResultsController.fetchedObjects as! [Pin]
+        mapView.addAnnotations(createAnnotations(pins))
     }
     
     func fetchRegion() {
@@ -104,12 +112,6 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         mapView.setCenterCoordinate(center, animated: true)
     }
     
-    // MARK: - Convenience method for saving the managed object context.
-    
-    func saveContext() {
-        CoreDataStackManager.sharedInstance().saveContext()
-    }
-    
     // MARK: - Add pins to the map. Used by the UILongPressGestureRecognizer
     
     func addPin(recognizer: UILongPressGestureRecognizer) {
@@ -119,36 +121,54 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         
         switch recognizer.state {
         case .Began:
-            // Create a new Pin for the point that was touched on the map.
-            let pin = Pin(latitude: coordinate.latitude, longitude: coordinate.longitude, context: context)
-            currentPin = pin
-//        case .Changed:
-//            currentPin?.latitude = coordinate.latitude
-//            currentPin?.longitude = coordinate.longitude
+            // Create a new PinAnnotation for the point that was touched on the map.
+            currentAnnotation = PinAnnotation()
+            currentAnnotation!.coordinate = coordinate
+            mapView.addAnnotation(currentAnnotation!)
+        case .Changed:
+            currentAnnotation!.coordinate = coordinate
         case .Ended:
+            let latitude = currentAnnotation!.coordinate.latitude
+            let longitude = currentAnnotation!.coordinate.longitude
+            let pin = Pin(latitude: latitude, longitude: longitude, context: context)
+            
             saveContext()
-            let userInfo: [String:AnyObject] = ["pin": currentPin!]
+            currentAnnotation!.pin = pin
+            
+            let userInfo: [String:AnyObject] = ["pin": pin]
             NSNotificationCenter.defaultCenter().postNotificationName(DataModel.NotificationNames.SearchPhotos, object: nil, userInfo: userInfo)
         default:
             return
         }
     }
     
-    // MARK: - MKMapViewDelegate methods
+    // MARK: - Create annotations.
     
-    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
-        let pin = view.annotation as! Pin
+    func createAnnotations(pins: [Pin]) -> [PinAnnotation] {
+        var annotations = [PinAnnotation]()
         
-        if newState == .Ending {
-            pin.latitude = pin.coordinate.latitude
-            pin.longitude = pin.coordinate.longitude
+        for pin in pins {
+            
+            // Retrieve the latitude and longitude values
+            let lat = CLLocationDegrees(pin.latitude)
+            let long = CLLocationDegrees(pin.longitude)
+            
+            // The lat and long are used to create a CLLocationCoordinates2D instance.
+            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
+            
+            // Create the annotation and set its coordiate, title, and subtitle properties
+            let annotation = PinAnnotation()
+            annotation.coordinate = coordinate
+            annotation.pin = pin
+            
+            // Place the annotation in an array of annotations.
+            annotations.append(annotation)
         }
+        
+        return annotations
     }
     
-    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
-        let pin = view.annotation as! Pin
-        performSegueWithIdentifier(ShowPhotoAlbumViewController, sender: pin)
-    }
+    // MARK: - MKMapViewDelegate methods
     
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         let reuseId = "pin"
@@ -159,10 +179,8 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
             // Create a new pin view and initialise it.
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             pinView!.pinTintColor = MKPinAnnotationView.redPinColor()
-            pinView!.rightCalloutAccessoryView =  UIButton(type: UIButtonType.DetailDisclosure)
             pinView!.draggable = true
             pinView!.animatesDrop = true
-            pinView!.canShowCallout = true
         }
         else {
             // Reuse an existing pin view and set the annotation.
@@ -172,11 +190,11 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         return pinView
     }
     
-//    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
-//        mapView.deselectAnnotation(view.annotation!, animated: true)
-//        let pin = view.annotation as! Pin
-//        performSegueWithIdentifier(ShowPhotoAlbumViewController, sender: pin)
-//    }
+    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
+        mapView.deselectAnnotation(view.annotation!, animated: true)
+        let annotation = view.annotation as! PinAnnotation
+        performSegueWithIdentifier(ShowPhotoAlbumViewController, sender: annotation.pin!)
+    }
     
     func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         let region = [
@@ -193,13 +211,15 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         
         switch(type) {
-        case .Insert:
-            mapView.addAnnotation(anObject as! Pin)
-        case .Delete:
-            mapView.removeAnnotation(anObject as! Pin)
-        case .Update:
-            mapView.removeAnnotation(anObject as! Pin)
-            mapView.addAnnotation(anObject as! Pin)
+//        case .Insert:
+//            if let pin = anObject as? Pin {
+//                mapView.addAnnotation(anObject as! Pin)
+//            }
+//        case .Delete:
+//            mapView.removeAnnotation(anObject as! Pin)
+//        case .Update:
+//            mapView.removeAnnotation(anObject as! Pin)
+//            mapView.addAnnotation(anObject as! Pin)
         default:
             break
         }
