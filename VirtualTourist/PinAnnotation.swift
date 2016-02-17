@@ -11,6 +11,7 @@ import MapKit
 class PinAnnotation: MKPointAnnotation {
     
     var pin: Pin?
+    var createdAt: NSDate?
     
     override init() {
         super.init()

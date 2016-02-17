@@ -10,7 +10,7 @@ import UIKit
 import MapKit
 import CoreData
 
-class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSFetchedResultsControllerDelegate {
+class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate {
 
     let Region = "region"
     let RegionLatitude = "latitude"
@@ -31,33 +31,13 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         return CoreDataStackManager.sharedInstance().managedObjectContext
     }
     
-    lazy var fetchedResultsController: NSFetchedResultsController = {
-        let fetchRequest = NSFetchRequest(entityName: "Pin")
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "latitude", ascending: true)]
-        
-        let fetchedResultsController = NSFetchedResultsController(
-            fetchRequest: fetchRequest,
-            managedObjectContext: self.context,
-            sectionNameKeyPath: nil,
-            cacheName: nil)
-        
-        return fetchedResultsController
-    }()
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // This call is necessary to initialise the DataModel's observers.
-        DataModel.sharedInstance()
         
         longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: "addPin:")
         mapView.addGestureRecognizer(longPressGestureRecognizer!)
         mapView.delegate = self
-        fetchedResultsController.delegate = self
-    }
-    
-    override func viewWillAppear(animated: Bool) {
-        super.viewWillAppear(animated)
+        
         fetchPins()
         fetchRegion()
     }
@@ -71,8 +51,8 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
             
             // Configure the photo album view controller.
             let photoAlbumViewController = segue.destinationViewController as! PhotoAlbumViewController
-            let pin = sender as! Pin
-            photoAlbumViewController.pin = pin
+            let pinAnnotation = sender as! PinAnnotation
+            photoAlbumViewController.pinAnnotation = pinAnnotation
         }
     }
     
@@ -82,15 +62,20 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         CoreDataStackManager.sharedInstance().saveContext()
     }
     
-    // MARK: - Fetch the pins and the map region.
+    // MARK: - Fetch data.
     
     func fetchPins() {
+        let request = NSFetchRequest(entityName: "Pin")
+        request.sortDescriptors = [NSSortDescriptor(key: "latitude", ascending: true)]
+        
+        var pins: [Pin]? = nil
         do {
-            try fetchedResultsController.performFetch()
+            try pins = context.executeFetchRequest(request) as? [Pin]
         } catch {}
         
-        let pins = fetchedResultsController.fetchedObjects as! [Pin]
-        mapView.addAnnotations(createAnnotations(pins))
+        if let _ = pins {
+            mapView.addAnnotations(createAnnotations(pins!))
+        }
     }
     
     func fetchRegion() {
@@ -128,15 +113,15 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         case .Changed:
             currentAnnotation!.coordinate = coordinate
         case .Ended:
+            let createdAt = NSDate()
+            currentAnnotation!.createdAt = createdAt
             let latitude = currentAnnotation!.coordinate.latitude
             let longitude = currentAnnotation!.coordinate.longitude
-            let pin = Pin(latitude: latitude, longitude: longitude, context: context)
-            
+            let pin = Pin(latitude: latitude, longitude: longitude, createdAt: createdAt, context: context)
+            pin.isDownloading = true
             saveContext()
-            currentAnnotation!.pin = pin
             
-            let userInfo: [String:AnyObject] = ["pin": pin]
-            NSNotificationCenter.defaultCenter().postNotificationName(DataModel.NotificationNames.SearchPhotos, object: nil, userInfo: userInfo)
+            DataModel.searchPhotos(pin)
         default:
             return
         }
@@ -159,7 +144,7 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
             // Create the annotation and set its coordiate, title, and subtitle properties
             let annotation = PinAnnotation()
             annotation.coordinate = coordinate
-            annotation.pin = pin
+            annotation.createdAt = pin.createdAt
             
             // Place the annotation in an array of annotations.
             annotations.append(annotation)
@@ -192,8 +177,8 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
         mapView.deselectAnnotation(view.annotation!, animated: true)
-        let annotation = view.annotation as! PinAnnotation
-        performSegueWithIdentifier(ShowPhotoAlbumViewController, sender: annotation.pin!)
+        let pinAnnotation = view.annotation as! PinAnnotation
+        performSegueWithIdentifier(ShowPhotoAlbumViewController, sender: pinAnnotation)
     }
     
     func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
@@ -204,25 +189,6 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
             RegionLongitudeDelta: mapView.region.span.longitudeDelta
         ]
         NSUserDefaults.standardUserDefaults().setObject(region, forKey: Region)
-    }
-    
-    // MARK: - NSFetchedResultsControllerDelegateMethods
-    
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
-        
-        switch(type) {
-//        case .Insert:
-//            if let pin = anObject as? Pin {
-//                mapView.addAnnotation(anObject as! Pin)
-//            }
-//        case .Delete:
-//            mapView.removeAnnotation(anObject as! Pin)
-//        case .Update:
-//            mapView.removeAnnotation(anObject as! Pin)
-//            mapView.addAnnotation(anObject as! Pin)
-        default:
-            break
-        }
     }
 }
 

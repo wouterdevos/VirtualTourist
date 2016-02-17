@@ -18,13 +18,14 @@ class VirtualTouristClient : NSObject {
         let queryParameters: [String:AnyObject] = [
             QueryKeys.APIKey: Constants.FlickrAPIKey,
             QueryKeys.Method: Methods.PhotosSearch,
-            QueryKeys.BBox: createBoundingBoxString(pin.getLatitude(), longitude: pin.getLongitude()),
             QueryKeys.SafeSearch: Constants.SafeSearch,
             QueryKeys.Extras: Constants.Extras,
             QueryKeys.Format: Constants.DataFormat,
             QueryKeys.NoJSONCallback: Constants.NoJSONCallback,
             QueryKeys.PerPage: Constants.PerPage,
-            QueryKeys.Page: pin.page
+            QueryKeys.Page: pin.page,
+            QueryKeys.Lat: pin.getLatitude(),
+            QueryKeys.Lon: pin.getLongitude()
         ]
         
         // Create url.
@@ -52,23 +53,7 @@ class VirtualTouristClient : NSObject {
                     return
                 }
                 
-                guard let total = (photos[JSONResponseKeys.Total] as? NSString)?.integerValue else {
-                    completionHandler(result: nil, errorString: "Cannot find key 'total' in JSON")
-                    return
-                }
-                
-                if total > 0 {
-                    
-                    guard let photoArray = photos[JSONResponseKeys.Photo] as? [[String:AnyObject]] else {
-                        completionHandler(result: nil, errorString: "Cannot find key 'photo' in JSON")
-                        return
-                    }
-                    
-                    completionHandler(result: photoArray, errorString: nil)
-                    return
-                }
-                
-                completionHandler(result: [[String:AnyObject]](), errorString: nil)
+                completionHandler(result: photos, errorString: nil)
             }
         }
     }
@@ -84,17 +69,6 @@ class VirtualTouristClient : NSObject {
                 completionHandler(imageData: data, errorString: nil)
             }
         }
-    }
-    
-    func createBoundingBoxString(latitude: Double, longitude: Double) -> String {
-        
-        // Fix added to ensure box is bounded by minimum and maximums.
-        let bottomLeftLon = max(longitude - Constants.BOUNDING_BOX_HALF_WIDTH, Constants.LON_MIN)
-        let bottomLeftLat = max(latitude - Constants.BOUNDING_BOX_HALF_HEIGHT, Constants.LAT_MIN)
-        let topRightLon = min(longitude + Constants.BOUNDING_BOX_HALF_HEIGHT, Constants.LON_MAX)
-        let topRightLat = min(latitude + Constants.BOUNDING_BOX_HALF_HEIGHT, Constants.LAT_MAX)
-        
-        return "\(bottomLeftLon),\(bottomLeftLat),\(topRightLon),\(topRightLat)"
     }
     
     class func sharedInstance() -> VirtualTouristClient {

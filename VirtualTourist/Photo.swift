@@ -24,6 +24,7 @@ class Photo: NSManagedObject {
     @NSManaged var url: String
     @NSManaged var height: String
     @NSManaged var width: String
+    @NSManaged var downloaded: Bool
     @NSManaged var pin: Pin?
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
@@ -46,6 +47,7 @@ class Photo: NSManagedObject {
         url = dictionary[Keys.URL] as! String
         height = dictionary[Keys.Height] as! String
         width = dictionary[Keys.Width] as! String
+        downloaded = false
     }
     
     var image: UIImage? {
@@ -55,6 +57,7 @@ class Photo: NSManagedObject {
         
         set {
             ImageCache.sharedInstance().storeImage(newValue, withIdentifier: id)
+            downloaded = true
         }
     }
 }
